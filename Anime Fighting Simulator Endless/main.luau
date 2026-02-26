@@ -1,6 +1,8 @@
 getgenv().script_name = "kitty"
 getgenv().script_version = "client"
 
+local functions = require("./functions")
+
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/panduh16/juju/main/ui.lua"))()
 local menu = lib["menu"]
 
