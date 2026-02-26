@@ -1,8 +1,27 @@
+-- Global Variables
 getgenv().script_name = "kitty"
 getgenv().script_version = "client"
 
-local functions = require("./functions")
+-- Services
+local playersService = cloneref(game:GetService("Players"))
 
+-- Variables
+local lplr = playersService.LocalPlayer
+
+-- Functions
+local function getChar()
+    return lplr.Character or lplr.CharacterAdded:Wait()
+end
+
+local function getHum()
+    return getChar():WaitForChild("Humanoid")
+end
+
+local function getRoot()
+    return getHum().RootPart or getHum():GetPropertyChangedSignal("RootPart"):Wait()
+end
+
+-- User Interface
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/panduh16/juju/main/ui.lua"))()
 local menu = lib["menu"]
 
