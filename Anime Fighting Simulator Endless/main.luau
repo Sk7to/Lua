@@ -1,5 +1,5 @@
 -- Global Variables
-getgenv().script_name = "kitty"
+getgenv().script_name = "1000-7"
 getgenv().script_version = "client"
 
 -- Services
@@ -10,6 +10,7 @@ local lplr = playersService.LocalPlayer
 
 local currentQuest
 
+-- Paths
 local questsFolder = lplr:WaitForChild("Quests")
 local statsFolder = lplr:WaitForChild("Stats")
 local upgradesFolder = lplr:WaitForChild("Upgrades")
