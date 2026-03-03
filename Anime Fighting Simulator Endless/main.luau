@@ -1,14 +1,14 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Global Variables
 getgenv().script_name = "1000-7"
 getgenv().script_version = "client"
 
 -- Services
 local playersService = cloneref(game:GetService("Players"))
+local replicatedStorageService = cloneref(game:GetService("ReplicatedStorage"))
 
 -- Variables
 local lplr = playersService.LocalPlayer
-
-local currentQuest
 
 -- Paths
 local questsFolder = lplr:WaitForChild("Quests")
@@ -57,11 +57,19 @@ local function getRoot()
     return getHum().RootPart or getHum():GetPropertyChangedSignal("RootPart"):Wait()
 end
 
-local function disconnect(name)
+local function disconnect(name: string)
     if connections[name] then
         connections[name]:Disconnect()
         connections[name] = nil
     end
+end
+
+local function trainStat(stat: number) 
+    local args = {
+	    "Train",
+	    stat
+    }
+    replicatedStorageService:WaitForChild("shared"):WaitForChild("Remotes"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
 end
 
 -- User Interface
@@ -82,32 +90,63 @@ local connection = lib["create_connection"](main_quest_macro["on_toggle_change"]
         disconnect("completedQuestConnection")
         disconnect("newQuestConnection")
 
-        current = nil
+        local currentQuest = nil
+        local statsToTrain = {}
         for _, quest in pairs(questsFolder:GetChildren()) do
             if string.find(quest.Name, "Boom") and not quest:WaitForChild("Completed").Value and #quest:GetChildren() > 0 then
-                current = quest.Name
-                print(current)
+                currentQuest = quest.Name
+                print(currentQuest)
+                for _, stat in pairs(questsFolder:WaitForChild(currentQuest):WaitForChild("Requirements"):GetChildren()) do
+                    if stats[stat.Name] then
+                        statsToTrain[stat.Name] = stat.Value
+                    end
+                end
+
+                for i, v in pairs(statsToTrain) do
+                    print(i, v)
+                end
                 break
             end
         end
 
         connections["newQuestConnection"] = questsFolder.ChildAdded:Connect(function(quest)
             if string.find(quest.Name, "Boom") and not quest:WaitForChild("Completed").Value and #quest:GetChildren() > 0 then
-                current = quest.Name
-                print(current)
+                currentQuest = quest.Name
+                print(currentQuest)
+                for _, stat in pairs(questsFolder:WaitForChild(currentQuest):WaitForChild("Requirements"):GetChildren()) do
+                    if stats[stat.Name] then
+                        statsToTrain[stat.Name] = stat.Value
+                    end
+                end
+
+                for i, v in pairs(statsToTrain) do
+                    print(i, v)
+                end
             end
         end)
 
-        connections["completedQuestConnection"] = questsFolder[current]:WaitForChild("Completed"):GetPropertyChangedSignal("Value"):Connect(function()
+        connections["completedQuestConnection"] = questsFolder[currentQuest]:WaitForChild("Completed"):GetPropertyChangedSignal("Value"):Connect(function()
             if true then
-                print(`Completed {current}`)
-                current = nil
+                print(`Completed {currentQuest}`)
+                currentQuest = nil
+                statsToTrain = {}
             end
         end)
+
+        for stat, amount in pairs(statsToTrain) do
+            task.spawn(function()
+                while currentQuest and statsToTrain[stat] do
+                    trainStat(tonumber(stat))
+                    task.wait(0.5)
+                end
+            end)
+        end
+
     else
         disconnect("completedQuestConnection")
         disconnect("newQuestConnection")
-        current = nil
+        currentQuest = nil
+        statsToTrain = {}
     end
 end)
 
